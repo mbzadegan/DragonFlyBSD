@@ -5,7 +5,7 @@ directory (additional copyright information also exists for some
 sources in this tree - please see the specific source directories for
 more information).
 
-The Makefile in this directory supports a number of targets for
+The Makefile in this directory supports several targets for
 building components (or all) of the DragonFly source tree, the most
 commonly used being ``buildworld'' and ``installworld'', which rebuild
 and install everything in the DragonFly system from the source tree
