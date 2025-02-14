@@ -9,7 +9,7 @@ $ cd /usr/src/nrelease
 $ make release binpkgs \
        DPORTS_EXTRA_PACKAGES="lang/gcc13 math/lapack math/blas math/openblas"
 ```
-The ISO and IMG images are at **/usr/obj/release**when it finishes.
+The ISO and IMG images are at **/usr/obj/release** when it finishes.
 
 You can find the available nrelease targets and options with:
 ```
