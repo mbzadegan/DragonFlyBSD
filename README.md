@@ -3,11 +3,11 @@
 The nrelease framework is used to build our release and snapshot images
 (ISO and IMG).
 
-To build a custom image with extra packages, just do:
+To build a custom image with extra packages (For example: gcc13, lapack, blas, openblas), just do:
 ```
 $ cd /usr/src/nrelease
 $ make release binpkgs \
-       DPORTS_EXTRA_PACKAGES="lang/gcc12 math/lapack math/blas
+       DPORTS_EXTRA_PACKAGES="lang/gcc13 math/lapack math/blas
 math/openblas"
 ```
 When it finishes, the ISO and IMG images are at **/usr/obj/release**.
