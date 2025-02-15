@@ -1,4 +1,4 @@
-# How compile new release 
+# How compile new FortranBSD release 
 
 The nrelease framework is used to build our release and snapshot images
 (ISO and IMG).
