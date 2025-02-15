@@ -40,3 +40,7 @@ Variables:
    WITHOUT_SRCS: do not package source code if set
 
 ```
+
+For uploading to the SourceForge via SFTP, we should upload it to this folder:
+
+```/home/pfs/project/fortranbsd```
