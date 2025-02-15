@@ -40,6 +40,7 @@
 #include <net/if.h>
 #include <net/route.h>
 #include <net/if_dl.h>
+#include <net/if_types.h>
 #include <netinet/in.h>
 #include <netinet/if_ether.h>
 #include <arpa/inet.h>
@@ -330,11 +331,12 @@ bad:			usage(*argv);
 char *
 routename(struct sockaddr *sa)
 {
-	const char *cp;
 	static char line[MAXHOSTNAMELEN + 1];
-	struct hostent *hp;
 	static char domain[MAXHOSTNAMELEN + 1];
 	static int first = 1;
+
+	struct hostent *hp;
+	const char *cp;
 
 	if (first) {
 		first = 0;
@@ -346,12 +348,15 @@ routename(struct sockaddr *sa)
 			domain[0] = 0;
 	}
 
-	if (sa->sa_len == 0)
+	if (sa->sa_len == 0) {
 		strcpy(line, "default");
-	else switch (sa->sa_family) {
+		return (line);
+	}
 
+	switch (sa->sa_family) {
 	case AF_INET:
-	    {	struct in_addr in;
+	    {
+		struct in_addr in;
 		in = ((struct sockaddr_in *)sa)->sin_addr;
 
 		cp = NULL;
@@ -412,7 +417,28 @@ routename(struct sockaddr *sa)
 #endif
 
 	case AF_LINK:
-		return(link_ntoa((struct sockaddr_dl *)sa));
+	    {
+		struct sockaddr_dl *sdl = (struct sockaddr_dl *)sa;
+
+		if (sdl->sdl_nlen == 0 && sdl->sdl_alen == 0 &&
+		    sdl->sdl_slen == 0) {
+			sprintf(line, "link#%d", sdl->sdl_index);
+			return (line);
+		}
+
+		switch (sdl->sdl_type) {
+		case IFT_ETHER:
+		case IFT_L2VLAN:
+		case IFT_CARP:
+			if (sdl->sdl_alen == ETHER_ADDR_LEN) {
+				return ether_ntoa((struct ether_addr *)
+				    (sdl->sdl_data + sdl->sdl_nlen));
+			}
+			/* FALLTHROUGH */
+		default:
+			return link_ntoa(sdl);
+		}
+	    }
 
 	default:
 	    {
@@ -426,11 +452,13 @@ routename(struct sockaddr *sa)
 		char *cpe = line + sizeof(line);
 
 		while (sp < splim && cps < cpe)
-			cps += snprintf(cps, cpe - cps, " %02x", *sp++);
+			cps += snprintf(cps, cpe - cps, "%02x.", *sp++);
+		cps[-1] = '\0';
 		break;
 	    }
 	}
-	return(line);
+
+	return (line);
 }
 
 /*
@@ -1077,8 +1105,7 @@ getaddr(int which, const char *str, struct hostent **hpp)
 		if (getaddrinfo(str, "0", &hints, &res) != 0 ||
 		    res->ai_family != AF_INET6 ||
 		    res->ai_addrlen != sizeof(su->sin6)) {
-			fprintf(stderr, "%s: bad value\n", str);
-			exit(1);
+			errx(EX_NOHOST, "bad value: %s", str);
 		}
 		memcpy(&su->sin6, res->ai_addr, sizeof(su->sin6));
 #ifdef __KAME__
@@ -1704,8 +1731,8 @@ pmsg_addrs(char *cp, int addrs)
 	printf("\nsockaddrs: ");
 	bprintf(stdout, addrs, addrnames);
 	putchar('\n');
-	for (i = 1; i != 0; i <<= 1)
-		if (i & addrs) {
+	for (i = 0; i < RTAX_MAX; i++)
+		if (addrs & (1 << i)) {
 			sa = (struct sockaddr *)cp;
 			printf(" %s", routename(sa));
 			RT_ADVANCE(cp, sa);
